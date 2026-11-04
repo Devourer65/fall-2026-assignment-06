@@ -1,17 +1,21 @@
 import { db } from './db.js';
-import { FileMigrationProvider, Migrator } from 'kysely/migration';
-import path from 'node:path';
-import fs from 'node:fs/promises';
+import { Migrator } from 'kysely/migration';
+import * as migration01 from './migrations/0001_initial_schema.js';
+import * as migration02 from './migrations/0002_add_comments.js';
 
 async function migrateToLatest() {
   const migrator = new Migrator({
     db,
-    provider: new FileMigrationProvider({
-      fs,
-      path,
-      migrationFolder: path.join(import.meta.dirname, 'migrations'),
-    }),
+    provider: {
+      async getMigrations() {
+        return {
+          '01_initial': migration01,
+          '02_add_comments': migration02,
+        };
+      },
+    },
   });
+
   const { error, results } = await migrator.migrateToLatest();
 
   results?.forEach((it) => {
